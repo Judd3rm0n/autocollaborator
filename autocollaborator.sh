@@ -166,113 +166,61 @@ echo "Creating config file please wait......" && sleep 5
 cat <<EOF >/usr/local/collaborator/collaborator.config
 { 
 
-  "serverDomain" : "$domainv", 
+  {
+  "serverDomain" : "domainv",
+  "workerThreads" : 10,
+  "eventCapture": {
+      "localAddress" : [ "ipaddressv" ],
+      "publicAddress" : "ipaddressv",
+      "http": {
+         "ports" : 3380
+       },
+      "https": {
+          "ports" : 33443
+      },
+      "smtp": {
+          "ports" : [3325, 33587]
+      },
+      "smtps": {
+          "ports" : 33465
+      },
+      "ssl": {
+          "certificateFiles" : [
+              "/usr/local/collaborator/certs/privkey.pem",
+              "/usr/local/collaborator/certs/cert.pem",
+              "/usr/local/collaborator/certs/fullchain.pem" ]
+      }
+  },
+  "polling" : {
+      "localAddress" :  "ipaddressv", # and here
+      "publicAddress" :  "ipaddressv", # and here
+      "http": {
+          "port" : 39090
+      },
+      "https": {
+          "port" : 39443
+      },
+      "ssl": {
+          "certificateFiles" : [
+              "/usr/local/collaborator/certs/privkey.pem",
+              "/usr/local/collaborator/certs/cert.pem",
+              "/usr/local/collaborator/certs/fullchain.pem" ]
 
-  "workerThreads" : 10, 
-
-  "eventCapture": { 
-
-    "localAddress" : ["$ipaddressv", "127.0.0.1"], 
-
-    "publicAddress" : "$ipaddressv", 
-
-    "http": { 
-
-      "ports" : 3380 
-
-    }, 
-
-    "https": { 
-
-      "ports" : 33443 
-
-    }, 
-
-    "smtp": { 
-
-      "ports" : [3325, 33587] 
-
-    }, 
-
-    "smtps": { 
-
-      "ports" : 33465 
-
-    }, 
-
-    "ssl": { 
-
-      "certs/cert.pem" : [ 
-
-        "certs/chain.pem", 
-
-        "certs/fullchain.pem", 
-
-        "certs/privkey.pem" ]  
-    } 
-
-  }, 
-
-  "polling" : { 
-
-    "localAddress" : "127.0.0.1", 
-
-    "publicAddress" : "$ipaddressv", 
-
-    "http": { 
-
-      "port" : 39090 
-
-    }, 
-
-    "https": { 
-
-      "port" : 39443 
-
-    }, 
-
-    "ssl": { 
-
-      "hostname" : "$domainv" 
-
-    } 
-
-  }, 
-
-  "metrics": { 
-
-    "path" : "jnaicmez8", 
-
-    "addressWhitelist" : ["$ipaddressv/24"] 
-
-  }, 
-
-  "dns": { 
-
-    "interfaces" : [{ 
-
-      "name": "ns1.$domainv", 
-
-      "localAddress" : "$ipaddressv", 
-
-      "publicAddress" : "$ipaddressv" 
-
-    }, { 
-
-      "name" : "ns2.$domainv", 
-
-      "localAddress" : "$ipaddressv", 
-
-      "publicAddress" : "$ipaddressv" 
-
-    }], 
-
-    "ports" : 3353 
-
-  }, 
-
-  "logLevel" : "INFO" 
-
+      }
+  },
+  "metrics": {
+      "path" : "jnaicmez8",
+      "addressWhitelist" : ["0.0.0.0/1"]
+  },
+  "dns": {
+      "interfaces" : [{
+          "name":"ns1.domainv", # and here
+          "localAddress":"ipaddressv", # and here
+          "publicAddress":"ipaddressv" # and here
+      }],
+      "ports" : 3353
+   },
+   "logLevel" : "INFO"
 }
 EOF
 
