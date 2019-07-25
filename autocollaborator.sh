@@ -84,13 +84,13 @@ cp -a /etc/letsencrypt/live/$domainv/. /usr/local/collaborator/certs/
 aut(){
 read -r -p "${1:-Do you need a SSL cert? [y/N]} " response
     case "$response" in
-        [yY][eE][sS]|[yY]) 
+        [yY]*) 
             true
 			echo "ok"
 			echo "Running Certbot."
 			certin
             ;;
-        *)
+        [nN]*)
             false
 			echo "Skipping...."
 			sleep 1
