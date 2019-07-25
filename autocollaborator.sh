@@ -167,11 +167,11 @@ cat <<EOF >/usr/local/collaborator/collaborator.config
 { 
 
   {
-  "serverDomain" : "domainv",
+  "serverDomain" : "$domainv",
   "workerThreads" : 10,
   "eventCapture": {
-      "localAddress" : [ "ipaddressv" ],
-      "publicAddress" : "ipaddressv",
+      "localAddress" : [ "$ipaddressv" ],
+      "publicAddress" : "$ipaddressv",
       "http": {
          "ports" : 3380
        },
@@ -192,8 +192,8 @@ cat <<EOF >/usr/local/collaborator/collaborator.config
       }
   },
   "polling" : {
-      "localAddress" :  "ipaddressv", # and here
-      "publicAddress" :  "ipaddressv", # and here
+      "localAddress" :  "$ipaddressv", # and here
+      "publicAddress" :  "$ipaddressv", # and here
       "http": {
           "port" : 39090
       },
@@ -214,9 +214,9 @@ cat <<EOF >/usr/local/collaborator/collaborator.config
   },
   "dns": {
       "interfaces" : [{
-          "name":"ns1.domainv", # and here
-          "localAddress":"ipaddressv", # and here
-          "publicAddress":"ipaddressv" # and here
+          "name":"ns1.$domainv", # and here
+          "localAddress":"$ipaddressv", # and here
+          "publicAddress":"$ipaddressv" # and here
       }],
       "ports" : 3353
    },
