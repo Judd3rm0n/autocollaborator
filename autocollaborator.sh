@@ -26,6 +26,27 @@ else
 	exit
 fi
 
+## Make directory for collaborator
+printf "\n Creating collaborator directory....." && sleep 1
+mkdir -p /usr/local/collaborator
+mkdir -p /usr/local/collaborator/certs
+printf "\n \n Checking...... "
+# IF file
+if [ -d "/usr/local/collaborator" ]
+then
+	echo "/usr/local/collaborator found...................."
+else
+	echo "Error - directory could not be made. Exiting."
+	exit
+fi
+if [ -d "/usr/local/collaborator/certs" ]
+then
+	echo "/usr/local/collaborator/certs found...................."
+else
+	echo "Error - directory certs could not be made. Exiting."
+	exit
+fi
+
 # run update if needed
 upd(){
 if [ "$upr" -ge "1" ]
@@ -39,17 +60,25 @@ if [ "$upr" -ge "1" ]
 # Certbot install and ssl
 upr="0"
 certin(){
-echo "Running update and installing certbot"
+echo "Checking if certbot install is required"
 sleep 1
+if  [ ! -f /usr/local/collaborator/certbot-auto   ]
+then
 upd
 echo "Installing certbot"
 cd /usr/local/collaborator/
 wget https://dl.eff.org/certbot-auto
 chmod a+x ./certbot-auto
 echo "Starting certbot....... \n"
+else
+echo "Certbot found! \n Skipping certbot install.."
+fi
+echo "Installing certs.............................."
 sleep 2
-./certbot-auto certonly -d $domainv -d *.$domainv  --server https://acme-v02.api.letsencrypt.org/directory --manual --agree-tos --no-eff-email --manual-public-ip-logging-ok --preferred-challenges dns-01
-
+./certbot-auto certonly -d $domainv -d *.$domainv  --server https://acme-v02.api.letsencrypt.org/directory --manual --agree-tos --register-unsafely-without-email --manual-public-ip-logging-ok --preferred-challenges dns-01
+letspath="/etc/letsencrypt/live/$domainv"
+echo "Installing Certs..... " && sleep 1
+cp $letspath/* usr/local/collaborator/certs
 
 }
 
@@ -60,7 +89,7 @@ read -r -p "${1:-Do you need a SSL cert? [y/N]} " response
         [yY][eE][sS]|[yY]) 
             true
 			echo "ok"
-			echo "We will now install certbot."
+			echo "Running Certbot."
 			certin
             ;;
         *)
@@ -133,32 +162,8 @@ fi
 }
 pak
 
-## Make directory for collaborator
-printf "\n Creating directory....." && sleep 1
-mkdir -p /usr/local/collaborator
-mkdir -p /usr/local/collaborator/certs
-printf "\n \n Checking...... "
-
-# IF file
-if [ -d "/usr/local/collaborator" ]
-then
-	echo "Done"
-else
-	echo "Error - directory could not be made. Exiting."
-	exit
-fi
-
-## Copy files to collaborator
-echo "\n Copying files"
-
-cp burpsuite_pro.jar /usr/local/collaborator
-
-# Service Method
-
-sm(){
-
-sudo adduser --shell /bin/nologin --no-create-home --system collaborator
-sudo chown collaborator /usr/local/collaborator
+#write config file and create iptables
+configw(){
 echo "Creating config file please wait......" && sleep 5
 cat <<EOF >/usr/local/collaborator/collaborator.config
 { 
@@ -287,6 +292,22 @@ iptables -t nat -A PREROUTING -i ens3 -p tcp --dport 443 -j REDIRECT --to-port 3
 iptables-save
 
 echo "complete....." && sleep 1
+}
+
+
+
+## Copy files to collaborator
+echo "\n Copying files"
+
+cp burpsuite_pro.jar /usr/local/collaborator
+
+# Service Method
+
+sm(){
+
+sudo adduser --shell /bin/nologin --no-create-home --system collaborator
+sudo chown collaborator /usr/local/collaborator
+configw
 echo "Setting up service... "
 cat <<EOF >/etc/systemd/system/collaborator.service
 [Unit]
@@ -297,7 +318,7 @@ After=network.target
 Type=simple
 User=collaborator
 UMask=007
-ExecStart=/usr/bin/java -Xms10m -Xmx200m -XX:GCTimeRatio=19 -jar /usr/local/collaborator/burpsuite_pro_1.7.33.jar --collaborator-server --collaborator-config=/usr/local/collaborator/collaborator.config
+ExecStart=/usr/bin/java -Xms10m -Xmx200m -XX:GCTimeRatio=19 -jar /usr/local/collaborator/burpsuite_pro.jar --collaborator-server --collaborator-config=/usr/local/collaborator/collaborator.config
 Restart=on-failure
 
 # Configures the time to wait before service is stopped forcefully.
@@ -314,6 +335,17 @@ echo "\n Process complete..... \n To start burp collaborator server use: systemc
 
 
 }
+
+# Standard Method
+mm(){
+
+configw
+echo "Complete..... " && sleep 3
+echo "Manual setup completed.... \n"
+echo "To start burp run ./usr/local/collaborator/burpsuite_pro.jar --collaborator-server --collaborator-config=/usr/local/collaborator/collaborator.config"
+
+}
+
 #Service user?
 
 serviceRequest(){
@@ -327,6 +359,7 @@ read -r -p "${1:-Do you want to create burp collaborator as a service? - This wi
         *)
             false
 			echo "Creating as manual launch...."
+			mm
             ;;
     esac
 }
