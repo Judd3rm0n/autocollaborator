@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#BUrp Collaborator Auto Installer
+#Burp Collaborator auto installer.  You will need root and a legal copy of burp suite pro -not included-.
 
 #Check if root
 if [ $(id -u) != "0" ]
@@ -14,10 +14,10 @@ echo "Looking for burp jar"
 sleep 1
 if [ -e burpsuite_pro.jar ]
 then
-	echo "Burp Setup Jar Found"
+	echo "Burp suite pro Jar Found"
 	Setupf=1
 else
-	echo "Burp Set Jar NOT FOUND! /n Cannot continue"
+	echo "Burp suite pro Jar NOT FOUND! \n Cannot continue"
 	exit
 fi
 # Ask if SSL is needed 
