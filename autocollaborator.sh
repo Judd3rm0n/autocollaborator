@@ -76,7 +76,7 @@ echo "Installing certs.............................."
 sleep 2
 ./certbot-auto certonly -d $domainv -d *.$domainv  --server https://acme-v02.api.letsencrypt.org/directory --manual --agree-tos --register-unsafely-without-email --manual-public-ip-logging-ok --preferred-challenges dns-01
 echo "Installing Certs..... " && sleep 1
-cp -a /etc/letsencrypt/live/$domainv/. usr/local/collaborator/certs/
+cp -a /etc/letsencrypt/live/$domainv/. /usr/local/collaborator/certs/
 
 }
 
