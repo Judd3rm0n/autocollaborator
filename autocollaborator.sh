@@ -166,7 +166,7 @@ echo "Creating config file please wait......" && sleep 5
 cat <<EOF >/usr/local/collaborator/collaborator.config
 { 
 
-  "serverdomain" : "$domainv", 
+  "serverDomain" : "$domainv", 
 
   "workerThreads" : 10, 
 
