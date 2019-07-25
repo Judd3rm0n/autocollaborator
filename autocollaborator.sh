@@ -163,8 +163,7 @@ pak
 #write config file and create iptables
 configw(){
 echo "Creating config file please wait......" && sleep 5
-cat <<EOF >/usr/local/collaborator/collaborator.config
-{ 
+cat <<EOF >/usr/local/collaborator/collaborator.config 
 
   {
   "serverDomain" : "$domainv",
