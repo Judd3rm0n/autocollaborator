@@ -66,7 +66,6 @@ if  [ ! -f /usr/local/collaborator/certbot-auto   ]
 then
 upd
 echo "Installing certbot"
-cd /usr/local/collaborator/
 wget https://dl.eff.org/certbot-auto
 chmod a+x ./certbot-auto
 echo "Starting certbot....... \n"
@@ -76,9 +75,8 @@ fi
 echo "Installing certs.............................."
 sleep 2
 ./certbot-auto certonly -d $domainv -d *.$domainv  --server https://acme-v02.api.letsencrypt.org/directory --manual --agree-tos --register-unsafely-without-email --manual-public-ip-logging-ok --preferred-challenges dns-01
-letspath="/etc/letsencrypt/live/$domainv"
 echo "Installing Certs..... " && sleep 1
-cp $letspath/* usr/local/collaborator/certs
+cp -a /etc/letsencrypt/live/$domainv/. usr/local/collaborator/certs/
 
 }
 
@@ -96,7 +94,7 @@ read -r -p "${1:-Do you need a SSL cert? [y/N]} " response
             false
 			echo "Skipping...."
 			sleep 1
-			echo "You will need to place your SSL files in the /usr/local/collaborator/certs folder and update the config file."
+			echo "You will need to place your SSL files in the /usr/local/collaborator/certs/ folder and update the config file."
             ;;
     esac
 }
