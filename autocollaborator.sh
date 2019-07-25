@@ -9,6 +9,11 @@ echo "Error - Please run: sudo sh auto-collaborator.sh"
 exit 1
 fi
 
+# Ask questions
+echo "Please enter the server IP address - " && read ipaddressv
+echo "Please enter the server domain name, including any subdomain you are using. - " && read domainv
+
+
 # Look for burp pro file
 echo "Looking for burp jar"
 sleep 1
@@ -17,29 +22,11 @@ then
 	echo "Burp suite pro Jar Found"
 	Setupf=1
 else
-	echo "Burp suite pro Jar NOT FOUND! \n Cannot continue"
+	echo "Burp suite pro Jar NOT FOUND! You will need a legal copy of Burp Suite Pro -not included- \n Cannot continue"
 	exit
 fi
-# Ask if SSL is needed 
-aut(){
-read -r -p "${1:-Do you need a SSL cert? [y/N]} " response
-    case "$response" in
-        [yY][eE][sS]|[yY]) 
-            true
-			echo "ok"
-            ;;
-        *)
-            false
-			echo "Skipping"
-            ;;
-    esac
-}
-aut && sleep 2
-#Check if Java and iptables are around
-echo "Checking for required packages.  If not install them" && sleep 3
 
 # run update if needed
-upr = "0"
 upd(){
 if [ "$upr" -ge "1" ]
 			then 
@@ -47,6 +34,47 @@ if [ "$upr" -ge "1" ]
 			fi
 			upr=$((upr-50))
 			}
+
+
+# Certbot install and ssl
+upr="0"
+certin(){
+echo "Running update and installing certbot"
+sleep 1
+upd
+echo "Installing certbot"
+cd /usr/local/collaborator/
+wget https://dl.eff.org/certbot-auto
+chmod a+x ./certbot-auto
+echo "Starting certbot....... \n"
+sleep 2
+./certbot-auto certonly -d $domainv -d *.$domainv  --server https://acme-v02.api.letsencrypt.org/directory --manual --agree-tos --no-eff-email --manual-public-ip-logging-ok --preferred-challenges dns-01
+
+
+}
+
+# Ask if SSL is needed 
+aut(){
+read -r -p "${1:-Do you need a SSL cert? [y/N]} " response
+    case "$response" in
+        [yY][eE][sS]|[yY]) 
+            true
+			echo "ok"
+			echo "We will now install certbot."
+			certin
+            ;;
+        *)
+            false
+			echo "Skipping...."
+			sleep 1
+			echo "You will need to place your SSL files in the /usr/local/collaborator/certs folder and update the config file."
+            ;;
+    esac
+}
+aut && sleep 2
+#Check if Java and iptables are around
+echo "Checking for required packages.  If not install them" && sleep 3
+
 
 # Install for iptables
 ipt(){
@@ -128,15 +156,14 @@ cp burpsuite_pro.jar /usr/local/collaborator
 # Service Method
 
 sm(){
+
 sudo adduser --shell /bin/nologin --no-create-home --system collaborator
 sudo chown collaborator /usr/local/collaborator
-echo "Please enter the server IP address - " && read ipaddressv
-echo "Please enter the server domainv name - " && read domainv
 echo "Creating config file please wait......" && sleep 5
 cat <<EOF >/usr/local/collaborator/collaborator.config
 { 
 
-  "serverdomainv" : "$domainv", 
+  "serverdomain" : "$domainv", 
 
   "workerThreads" : 10, 
 
