@@ -202,14 +202,13 @@ cat <<EOF >/usr/local/collaborator/collaborator.config
 
     "ssl": { 
 
-      "certs/certificateFiles" : [ 
+      "certs/cert.pem" : [ 
 
-        "certs/certificate.crt", 
+        "certs/chain.pem", 
 
-        "certs/ca_bundle.crt", 
+        "certs/fullchain.pem", 
 
-        "certs/private.key" ] 
-
+        "certs/privkey.pem" ]  
     } 
 
   }, 
