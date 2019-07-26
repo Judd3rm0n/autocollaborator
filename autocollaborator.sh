@@ -213,9 +213,9 @@ cat <<EOF >/usr/local/collaborator/collaborator.config
   },
   "dns": {
       "interfaces" : [{
-          "name":"ns1.$domainv", # and here
-          "localAddress":"$ipaddressv", # and here
-          "publicAddress":"$ipaddressv" # and here
+          "name":"ns1.$domainv", 
+          "localAddress":"$ipaddressv",
+          "publicAddress":"$ipaddressv"
       }],
       "ports" : 3353
    },
