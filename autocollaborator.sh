@@ -39,11 +39,11 @@ else
 	echo "Error - directory could not be made. Exiting."
 	exit
 fi
-if [ -d "/usr/local/collaborator/certs" ]
+if [ -d "/usr/local/collaborator/keys" ]
 then
-	echo "/usr/local/collaborator/certs found...................."
+	echo "/usr/local/collaborator/keys found...................."
 else
-	echo "Error - directory certs could not be made. Exiting."
+	echo "Error - directory keys could not be made. Exiting."
 	exit
 fi
 
@@ -95,7 +95,7 @@ read -r -p "${1:-Do you need a SSL cert? [y/N]} " response
             false
 			echo "Skipping...."
 			sleep 1
-			echo "You will need to place your SSL files in the /usr/local/collaborator/certs/ folder and update the config file."
+			echo "You will need to place your SSL files in the /usr/local/collaborator/keys/ folder and update the config file."
             ;;
     esac
 }
@@ -192,8 +192,8 @@ cat <<EOF >/usr/local/collaborator/collaborator.config
       }
   },
   "polling" : {
-      "localAddress" :  "$ipaddressv", # and here
-      "publicAddress" :  "$ipaddressv", # and here
+      "localAddress" :  "$ipaddressv",
+      "publicAddress" :  "$ipaddressv",
       "http": {
           "port" : 39090
       },
