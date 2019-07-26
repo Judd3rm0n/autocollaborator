@@ -222,6 +222,16 @@ cat <<EOF >/usr/local/collaborator/collaborator.config
    "logLevel" : "INFO"
 }
 EOF
+echo "Removing any prerouting on target ports........" && sleep 2
+iptables -t nat -D PREROUTING -i ens3 -p udp --dport 53 -j REDIRECT --to-port 3353
+iptables -t nat -D PREROUTING -i ens3 -p tcp --dport 9090 -j REDIRECT --to-port 39090
+iptables -t nat -D PREROUTING -i ens3 -p tcp --dport 25 -j REDIRECT --to-port 3325
+iptables -t nat -D PREROUTING -i ens3 -p tcp --dport 80 -j REDIRECT --to-port 3380
+iptables -t nat -D PREROUTING -i ens3 -p tcp --dport 587 -j REDIRECT --to-port 33587
+iptables -t nat -D PREROUTING -i ens3 -p tcp --dport 465 -j REDIRECT --to-port 33465
+iptables -t nat -D PREROUTING -i ens3 -p tcp --dport 9443 -j REDIRECT --to-port 39443
+iptables -t nat -D PREROUTING -i ens3 -p tcp --dport 443 -j REDIRECT --to-port 33443
+iptables-save
 
 echo "Setting up iptables..... " && sleep 2
 
