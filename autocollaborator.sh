@@ -29,7 +29,7 @@ fi
 ## Make directory for collaborator
 printf "\n Creating collaborator directory....." && sleep 1
 mkdir -p /usr/local/collaborator
-mkdir -p /usr/local/collaborator/certs
+mkdir -p /usr/local/collaborator/keys
 printf "\n \n Checking...... "
 # IF file
 if [ -d "/usr/local/collaborator" ]
@@ -76,8 +76,9 @@ echo "Installing certs.............................."
 sleep 2
 ./certbot-auto certonly -d $domainv -d *.$domainv  --server https://acme-v02.api.letsencrypt.org/directory --manual --agree-tos --register-unsafely-without-email --manual-public-ip-logging-ok --preferred-challenges dns-01
 echo "Installing Certs..... " && sleep 1
-cp -a /etc/letsencrypt/live/$domainv/. /usr/local/collaborator/certs/
-
+cp /etc/letsencrypt/live/$domainv/privkey.pem /usr/local/collaborator/keys/
+cp /etc/letsencrypt/live/$domainv/fullchain.pem /usr/local/collaborator/keys/
+cp /etc/letsencrypt/live/$domainv/cert.pem /usr/local/collaborator/keys/
 }
 
 # Ask if SSL is needed 
@@ -185,9 +186,9 @@ cat <<EOF >/usr/local/collaborator/collaborator.config
       },
       "ssl": {
           "certificateFiles" : [
-              "/usr/local/collaborator/certs/privkey.pem",
-              "/usr/local/collaborator/certs/cert.pem",
-              "/usr/local/collaborator/certs/fullchain.pem" ]
+              "/usr/local/collaborator/keys/privkey.pem",
+              "/usr/local/collaborator/keys/cert.pem",
+              "/usr/local/collaborator/keys/fullchain.pem" ]
       }
   },
   "polling" : {
@@ -201,9 +202,9 @@ cat <<EOF >/usr/local/collaborator/collaborator.config
       },
       "ssl": {
           "certificateFiles" : [
-              "/usr/local/collaborator/certs/privkey.pem",
-              "/usr/local/collaborator/certs/cert.pem",
-              "/usr/local/collaborator/certs/fullchain.pem" ]
+              "/usr/local/collaborator/keys/privkey.pem",
+              "/usr/local/collaborator/keys/cert.pem",
+              "/usr/local/collaborator/keys/fullchain.pem" ]
 
       }
   },
@@ -215,7 +216,7 @@ cat <<EOF >/usr/local/collaborator/collaborator.config
       "interfaces" : [{
           "name":"ns1.$domainv", 
           "localAddress":"$ipaddressv",
-          "publicAddress":"$ipaddressv"
+          "publicAddress":"$ipaddressv",
       }],
       "ports" : 3353
    },
@@ -261,6 +262,7 @@ sm(){
 
 sudo adduser --shell /bin/nologin --no-create-home --system collaborator
 sudo chown collaborator /usr/local/collaborator
+sudo chown -R collaborator /usr/local/collaborator/keys
 configw
 echo "Setting up service... "
 cat <<EOF >/etc/systemd/system/collaborator.service
@@ -296,7 +298,7 @@ mm(){
 configw
 echo "Complete..... " && sleep 3
 echo "Manual setup completed.... \n"
-echo "To start burp run ./usr/local/collaborator/burpsuite_pro.jar --collaborator-server --collaborator-config=/usr/local/collaborator/collaborator.config"
+echo "To start burp run sudo java -jar /usr/local/collaborator/burpsuite_pro.jar --collaborator-server --collaborator-config=collaborator.config"
 
 }
 
