@@ -540,7 +540,7 @@ fi
 
 
 EOF
-chmod /usr/bin/autocollaborator
+chmod +x /usr/bin/autocollaborator
 
 echo "Removing any prerouting on target ports........" && sleep 2
 iptables -t nat -D PREROUTING -i ens3 -p udp --dport 53 -j REDIRECT --to-port 3353
