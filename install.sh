@@ -117,7 +117,7 @@ read -r -p "${1:-Do you wish to install iptables? [y/N]} " response
             ;;
         *)
             false
-			echo "Sorry this script won't work without iptables, exiting..."
+			echo "Sorry I can't install without iptables-persistent, exiting..."
 			exit
             ;;
     esac
@@ -223,6 +223,325 @@ cat <<EOF >/usr/local/collaborator/collaborator.config
    "logLevel" : "INFO"
 }
 EOF
+echo "Creating terminal files........... " && sleep 2
+cat <<EOF >/usr/local/bin/autocollaborator
+
+#!/bin/bash
+valid=0
+if [[ $@ = "--flush-config" || $@ = "-fc" ]]
+then
+valid=1
+# Ask questions
+echo "Changing Config................. " && sleep 2
+echo "Please enter the server IP address - " && read ipaddressv
+echo "Please enter the server domain name, including any subdomain you are using. - " && read domainv
+echo "Recreating Config File......" && sleep 5
+cat <<EOF >/usr/local/collaborator/collaborator.config 
+
+  {
+  "serverDomain" : "$domainv",
+  "workerThreads" : 10,
+  "eventCapture": {
+      "localAddress" : [ "$ipaddressv" ],
+      "publicAddress" : "$ipaddressv",
+      "http": {
+         "ports" : 3380
+       },
+      "https": {
+          "ports" : 33443
+      },
+      "smtp": {
+          "ports" : [3325, 33587]
+      },
+      "smtps": {
+          "ports" : 33465
+      },
+      "ssl": {
+          "certificateFiles" : [
+              "/usr/local/collaborator/keys/privkey.pem",
+              "/usr/local/collaborator/keys/cert.pem",
+              "/usr/local/collaborator/keys/fullchain.pem" ]
+      }
+  },
+  "polling" : {
+      "localAddress" :  "$ipaddressv",
+      "publicAddress" :  "$ipaddressv",
+      "http": {
+          "port" : 39090
+      },
+      "https": {
+          "port" : 39443
+      },
+      "ssl": {
+          "certificateFiles" : [
+              "/usr/local/collaborator/keys/privkey.pem",
+              "/usr/local/collaborator/keys/cert.pem",
+              "/usr/local/collaborator/keys/fullchain.pem" ]
+
+      }
+  },
+  "metrics": {
+      "path" : "jnaicmez8",
+      "addressWhitelist" : ["0.0.0.0/1"]
+  },
+  "dns": {
+      "interfaces" : [{
+          "name":"ns1.$domainv", 
+          "localAddress":"$ipaddressv",
+          "publicAddress":"$ipaddressv",
+      }],
+      "ports" : 3353
+   },
+   "logLevel" : "INFO"
+}
+\EOF
+fi
+
+
+
+if [[ $@ = "--force-start" || $@ = "-fs" ]]
+then
+valid=1
+echo "Forcing start with no health checks........."
+sleep 1
+cd /usr/local/collaborator
+sudo java -jar burpsuite_pro.jar --collaborator-server --collaborator-config=collaborator.config
+fi
+
+#Reset IP tables if needed
+ipt(){
+echo "Confirming iptables................"
+iptables -t nat -A PREROUTING -i ens3 -p udp --dport 53 -j REDIRECT --to-port 3353
+iptables -t nat -A PREROUTING -i ens3 -p tcp --dport 9090 -j REDIRECT --to-port 39090
+iptables -t nat -A PREROUTING -i ens3 -p tcp --dport 25 -j REDIRECT --to-port 3325
+iptables -t nat -A PREROUTING -i ens3 -p tcp --dport 80 -j REDIRECT --to-port 3380
+iptables -t nat -A PREROUTING -i ens3 -p tcp --dport 587 -j REDIRECT --to-port 33587
+iptables -t nat -A PREROUTING -i ens3 -p tcp --dport 465 -j REDIRECT --to-port 33465
+iptables -t nat -A PREROUTING -i ens3 -p tcp --dport 9443 -j REDIRECT --to-port 39443
+iptables -t nat -A PREROUTING -i ens3 -p tcp --dport 443 -j REDIRECT --to-port 33443
+iptables-save >/dev/null
+echo "Done................ " && sleep 3
+}
+if [[ $1 == "" ]]
+then
+valid="1"
+end(){
+echo "Safely shutting down collaborator server......."
+sleep 2
+	echo "Closing Port 3325"
+	fuser -k 3325/tcp
+	echo "Closing Port 3380"
+	fuser -k 3380/tcp
+	echo "Closing Port 39090"
+	fuser -k 39090/tcp
+	echo "Closing Port 33587"
+	fuser -k 33587/tcp
+	echo "Closing Port 3353"
+	fuser -k 3353/tcp
+	echo "Closing Port 33465"
+	fuser -k 33465/tcp
+	echo "Closing Port 39443"
+	fuser -k 39443/tcp
+	echo "Closing Port 33443"
+	fuser -k 33443/tcp
+}
+trap end EXIT
+# Check ports and files and reset iptables if needed
+echo "Running pre-flight checks.... "
+pc(){
+if lsof -Pi :3325 -sTCP:LISTEN -t >/dev/null ; then
+    echo "Port 3325 is in LISTEN...."
+	echo "Killing 3325"
+	fuser -k 3325/tcp
+else
+    echo "Port 3325 Ready........."
+fi
+
+if lsof -Pi :3380 -sTCP:LISTEN -t >/dev/null ; then
+    echo "Port 3380 is in LISTEN...."
+	echo "Killing 3380"
+	fuser -k 3380/udp
+else
+    echo "Port 3380 Ready........."
+fi
+
+if lsof -Pi :39090 -sTCP:LISTEN -t >/dev/null ; then
+    echo "Port 39090 is in LISTEN...."
+	echo "Killing 39090"
+	fuser -k 39090/tcp
+else
+    echo "Port 39090 Ready........."
+fi
+
+if lsof -Pi :33587 -sTCP:LISTEN -t >/dev/null ; then
+    echo "Port 33587 is in LISTEN...."
+	echo "Killing 33587"
+	fuser -k 33587/tcp
+else
+    echo "Port 33587 Ready........."
+fi
+
+if lsof -Pi :3353 -sTCP:LISTEN -t >/dev/null ; then
+    echo "Port 3353 is in LISTEN...."
+	echo "Killing 3353"
+	fuser -k 3353/tcp
+else
+    echo "Port 3353 Ready........."
+fi
+
+if lsof -Pi :33465 -sTCP:LISTEN -t >/dev/null ; then
+    echo "Port 33465 is in LISTEN...."
+	echo "Killing 33465"
+	fuser -k 33465/tcp
+else
+    echo "Port 33465 Ready........."
+fi
+
+if lsof -Pi :39443 -sTCP:LISTEN -t >/dev/null ; then
+    echo "Port 39443 is in LISTEN...."
+	echo "Killing 39443"
+	fuser -k 39443/tcp
+else
+    echo "Port 39443 Ready........."
+fi
+
+if lsof -Pi :33443 -sTCP:LISTEN -t >/dev/null ; then
+    echo "Port 33443 is in LISTEN...."
+	echo "Killing 33443"
+	fuser -k 33443/tcp
+else
+    echo "Port 33443 Ready........."
+fi
+
+# 2nd wave
+if lsof -Pi :25 -sTCP:LISTEN -t >/dev/null ; then
+    echo "Port 3325 is in LISTEN...."
+	echo "Killing 3325"
+	fuser -k 25/tcp
+else
+    echo "Port 3325 Ready........."
+fi
+
+if lsof -Pi :80 -sTCP:LISTEN -t >/dev/null ; then
+    echo "Port 3380 is in LISTEN...."
+	echo "Killing 3380"
+	fuser -k 80/udp
+else
+    echo "Port 80 Ready........."
+fi
+
+if lsof -Pi :9090 -sTCP:LISTEN -t >/dev/null ; then
+    echo "Port 39090 is in LISTEN...."
+	echo "Killing 39090"
+	fuser -k 9090/tcp
+else
+    echo "Port 9090 Ready........."
+fi
+
+if lsof -Pi :587 -sTCP:LISTEN -t >/dev/null ; then
+    echo "Port 33587 is in LISTEN...."
+	echo "Killing 33587"
+	fuser -k 587/tcp
+else
+    echo "Port 587 Ready........."
+fi
+
+if lsof -Pi :53 -sTCP:LISTEN -t >/dev/null ; then
+    echo "Port 3353 is in LISTEN...."
+	echo "Killing 3353"
+	fuser -k 53/tcp
+else
+    echo "Port 53 Ready........."
+fi
+
+if lsof -Pi :465 -sTCP:LISTEN -t >/dev/null ; then
+    echo "Port 33465 is in LISTEN...."
+	echo "Killing 33465"
+	fuser -k 465/tcp
+else
+    echo "Port 465 Ready........."
+fi
+
+
+if lsof -Pi :443 -sTCP:LISTEN -t >/dev/null ; then
+    echo "Port 33443 is in LISTEN...."
+	echo "Killing 33443"
+	fuser -k 443/tcp
+else
+    echo "Port 443 Ready........."
+fi
+sleep 2
+}
+#check for files
+fb(){
+echo "Checking files.........." && sleep 2
+echo "Checking for burpsuite_pro.jar........"
+cd /usr/local/collaborator
+if [ -e burpsuite_pro.jar ]
+then
+	echo "Complete............."
+else
+	echo "ERROR!...................... Could not find burpsuite_pro.jar exiting!"
+	exit
+fi
+echo "Checking for config file.............."
+cd /usr/local/collaborator
+if [ -e collaborator.config ]
+then
+	echo "Complete............."
+else
+	echo "ERROR!...................... Could not find config file exiting!"
+	exit
+fi
+}
+fb
+pc
+ipt
+cd /usr/local/collaborator
+
+echo "Using screen to start burp collaborator server- on shut down/ctrl-c this script will close ports safely" & sleep 3
+me="$(whoami)"
+screen sudo -H -u $me bash -c "java -jar burpsuite_pro.jar --collaborator-server --collaborator-config=collaborator.config">/dev/null
+fi
+
+#help
+if [[ $@ = "--help" || $@ = "-h" ]]
+then
+valid=1
+echo "Welcome to autocollaborator 
+
+Usage:
+	
+	autocollaborator --help [-h]
+	
+Simple start: 
+	
+	autocollaborator
+	
+Change config:
+	
+	autocollaborator --flush-config [-fc]
+
+Forced start:
+
+	autocollaborator --force-start [-fs]
+
+
+
+To safe shutdown during use simply use ctrl c" 
+fi
+
+
+if [[ $valid = "0" ]] 
+then
+echo "Argument not valid, try autocollaborator -h or --help"
+fi
+
+
+
+EOF
+chmod /usr/bin/autocollaborator
+
 echo "Removing any prerouting on target ports........" && sleep 2
 iptables -t nat -D PREROUTING -i ens3 -p udp --dport 53 -j REDIRECT --to-port 3353
 iptables -t nat -D PREROUTING -i ens3 -p tcp --dport 9090 -j REDIRECT --to-port 39090
@@ -246,7 +565,7 @@ iptables -t nat -A PREROUTING -i ens3 -p tcp --dport 9443 -j REDIRECT --to-port 
 iptables -t nat -A PREROUTING -i ens3 -p tcp --dport 443 -j REDIRECT --to-port 33443
 iptables-save
 
-echo "complete....." && sleep 1
+echo "Complete....." && sleep 1
 }
 
 
@@ -256,68 +575,18 @@ echo "\n Copying files"
 
 cp burpsuite_pro.jar /usr/local/collaborator
 
-# Service Method
 
-sm(){
-
-sudo adduser --shell /bin/nologin --no-create-home --system collaborator
-sudo chown collaborator /usr/local/collaborator
-sudo chown -R collaborator /usr/local/collaborator/keys
-configw
-echo "Setting up service... "
-cat <<EOF >/etc/systemd/system/collaborator.service
-[Unit]
-Description=Burp Collaborator Server Daemon
-After=network.target
-
-[Service]
-Type=simple
-User=collaborator
-UMask=007
-ExecStart=/usr/bin/java -Xms10m -Xmx200m -XX:GCTimeRatio=19 -jar /usr/local/collaborator/burpsuite_pro.jar --collaborator-server --collaborator-config=/usr/local/collaborator/collaborator.config
-Restart=on-failure
-
-# Configures the time to wait before service is stopped forcefully.
-TimeoutStopSec=300
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-echo "Complete......" && sleep 3
-echo "Enabling as a service"
-systemctl enable collaborator
-echo "\n Process complete..... \n To start burp collaborator server use: systemctl start collaborator"
-
-
-}
 
 # Standard Method
 mm(){
 
 configw
 echo "Complete..... " && sleep 3
-echo "Manual setup completed.... \n"
-echo "To start burp run sudo java -jar /usr/local/collaborator/burpsuite_pro.jar --collaborator-server --collaborator-config=collaborator.config"
+echo "To start the collaborator server - use: autocollaborator"
 
 }
 
-#Service user?
+#Begin
 
-serviceRequest(){
-read -r -p "${1:-Do you want to create burp collaborator as a service? - This will create a burp service and user [y/N]} " service
-    case "$service" in
-        [yY][eE][sS]|[yY]) 
-            true
-			echo "Creating as service...."
-			sm
-            ;;
-        *)
-            false
-			echo "Creating as manual launch...."
-			mm
-            ;;
-    esac
-}
-serviceRequest
+mm
 
