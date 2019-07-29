@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #Burp Collaborator auto installer.  You will need root and a legal copy of burp suite pro -not included-.
-
+#v0.1
 #Check if root
 if [ $(id -u) != "0" ]
 then
@@ -223,83 +223,12 @@ cat <<EOF >/usr/local/collaborator/collaborator.config
    "logLevel" : "INFO"
 }
 EOF
-echo "Creating terminal files........... " && sleep 2
+echo "Creating bin files........... " && sleep 2
 cat <<EOF >/usr/local/bin/autocollaborator
-
 #!/bin/bash
 valid=0
-if [[ $@ = "--flush-config" || $@ = "-fc" ]]
-then
-valid=1
-# Ask questions
-echo "Changing Config................. " && sleep 2
-echo "Please enter the server IP address - " && read ipaddressv
-echo "Please enter the server domain name, including any subdomain you are using. - " && read domainv
-echo "Recreating Config File......" && sleep 5
-cat <<EOF >/usr/local/collaborator/collaborator.config 
 
-  {
-  "serverDomain" : "$domainv",
-  "workerThreads" : 10,
-  "eventCapture": {
-      "localAddress" : [ "$ipaddressv" ],
-      "publicAddress" : "$ipaddressv",
-      "http": {
-         "ports" : 3380
-       },
-      "https": {
-          "ports" : 33443
-      },
-      "smtp": {
-          "ports" : [3325, 33587]
-      },
-      "smtps": {
-          "ports" : 33465
-      },
-      "ssl": {
-          "certificateFiles" : [
-              "/usr/local/collaborator/keys/privkey.pem",
-              "/usr/local/collaborator/keys/cert.pem",
-              "/usr/local/collaborator/keys/fullchain.pem" ]
-      }
-  },
-  "polling" : {
-      "localAddress" :  "$ipaddressv",
-      "publicAddress" :  "$ipaddressv",
-      "http": {
-          "port" : 39090
-      },
-      "https": {
-          "port" : 39443
-      },
-      "ssl": {
-          "certificateFiles" : [
-              "/usr/local/collaborator/keys/privkey.pem",
-              "/usr/local/collaborator/keys/cert.pem",
-              "/usr/local/collaborator/keys/fullchain.pem" ]
-
-      }
-  },
-  "metrics": {
-      "path" : "jnaicmez8",
-      "addressWhitelist" : ["0.0.0.0/1"]
-  },
-  "dns": {
-      "interfaces" : [{
-          "name":"ns1.$domainv", 
-          "localAddress":"$ipaddressv",
-          "publicAddress":"$ipaddressv",
-      }],
-      "ports" : 3353
-   },
-   "logLevel" : "INFO"
-}
-\EOF
-fi
-
-
-
-if [[ $@ = "--force-start" || $@ = "-fs" ]]
+if [[ \$@ = "--force-start" || \$@ = "-fs" ]]
 then
 valid=1
 echo "Forcing start with no health checks........."
@@ -322,7 +251,7 @@ iptables -t nat -A PREROUTING -i ens3 -p tcp --dport 443 -j REDIRECT --to-port 3
 iptables-save >/dev/null
 echo "Done................ " && sleep 3
 }
-if [[ $1 == "" ]]
+if [[ \$1 == "" ]]
 then
 valid="1"
 end(){
@@ -500,12 +429,12 @@ ipt
 cd /usr/local/collaborator
 
 echo "Using screen to start burp collaborator server- on shut down/ctrl-c this script will close ports safely" & sleep 3
-me="$(whoami)"
-screen sudo -H -u $me bash -c "java -jar burpsuite_pro.jar --collaborator-server --collaborator-config=collaborator.config">/dev/null
+me="\$(whoami)"
+screen sudo -H -u \$me bash -c "java -jar burpsuite_pro.jar --collaborator-server --collaborator-config=collaborator.config">/dev/null
 fi
 
 #help
-if [[ $@ = "--help" || $@ = "-h" ]]
+if [[ \$@ = "--help" || \$@ = "-h" ]]
 then
 valid=1
 echo "Welcome to autocollaborator 
@@ -517,12 +446,8 @@ Usage:
 Simple start: 
 	
 	autocollaborator
-	
-Change config:
-	
-	autocollaborator --flush-config [-fc]
 
-Forced start:
+Forced start with no health checks:
 
 	autocollaborator --force-start [-fs]
 
@@ -532,7 +457,7 @@ To safe shutdown during use simply use ctrl c"
 fi
 
 
-if [[ $valid = "0" ]] 
+if [[ \$valid = "0" ]] 
 then
 echo "Argument not valid, try autocollaborator -h or --help"
 fi
