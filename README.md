@@ -7,11 +7,12 @@ A VPS a domain with access to add NS record and a working copy of the Burpsuite_
 
 # Setup Instructions
 1. Git clone this repo.
-2. Run sudo sh setup.sh
-3. Follow prompts and enter information when requested. 
-4. Setup DNS and A record to point to your VPS server. 
-5. Run $~ autocollaborator in your terminal.
-6. Test using burpsuite pro that your collaborator server is working. 
+2. Place your copy of burpsuite_pro.jar file in the repo file. 
+3. Run sudo sh setup.sh
+4. Follow prompts and enter information when requested. 
+5. Setup DNS and A record to point to your VPS server. 
+6. Run $~ autocollaborator in your terminal.
+7. Test using burpsuite pro that your collaborator server is working. 
 
 # Info
 ### SSL Setup (Let's Encrypt) 
