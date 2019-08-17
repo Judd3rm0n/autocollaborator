@@ -10,27 +10,30 @@ exit 1
 fi
 
 # Ask questions
-echo "Please enter the server IP address - " && read ipaddressv
-echo "Please enter the server domain name, including any subdomain you are using. - " && read domainv
+echo "Please enter the public server IP address: example: 123.456.789.101 \n" && read ipaddressv
+echo "\nPlease enter the server domain name, including any subdomain you are using\nexample: collaborator.mycollaboratordomain.com \n" && read domainv
+echo "\nPlease enter the NS of your collaborator server\nexample: ns1.mycollaboratordomain.com \n" && read nsv
 
 
 # Look for burp pro file
-echo "Looking for burp jar"
+echo "Looking for burp jar........\n"
 sleep 1
 if [ -e burpsuite_pro.jar ]
 then
-	echo "Burp suite pro Jar Found"
+	echo "Burp suite pro Jar Found\n\n"
 	Setupf=1
 else
-	echo "Burp suite pro Jar NOT FOUND! You will need a legal copy of Burp Suite Pro -not included- \n Cannot continue"
+	echo "Burp suite pro Jar NOT FOUND! You will need a legal copy of Burp Suite Pro -not included- \nCannot continue, exiting......."
 	exit
 fi
 
+echo "You will need to add $nsv as an ns record and add an 'a' record to your domain, if you haven't already done so!!" && sleep 4
+
 ## Make directory for collaborator
-printf "\n Creating collaborator directory....." && sleep 1
+printf "\nCreating collaborator directory....." && sleep 1
 mkdir -p /usr/local/collaborator
 mkdir -p /usr/local/collaborator/keys
-printf "\n \n Checking...... "
+printf "\n\nChecking...... "
 # IF file
 if [ -d "/usr/local/collaborator" ]
 then
@@ -83,8 +86,8 @@ cp /etc/letsencrypt/live/$domainv/cert.pem /usr/local/collaborator/keys/
 
 # Ask if SSL is needed 
 aut(){
-read -r -p "${1:-Do you need a SSL cert? [y/N]} " response
-    case "$response" in
+read -r -p "${1:-Do you need a SSL cert? [y/N]} " certresp
+    case "$certresp" in
         [yY]*) 
             true
 			echo "ok"
@@ -106,14 +109,14 @@ echo "Checking for required packages.  If not install them" && sleep 3
 
 # Install for iptables
 ipt(){
-read -r -p "${1:-Do you wish to install iptables? [y/N]} " response
-    case "$response" in
+read -r -p "${1:-Do you wish to install iptables? [y/N]} " iptablesresp
+    case "$iptablesresp" in
         [yY][eE][sS]|[yY]) 
             true
 			echo "Ok, installing..."
 			upr=$((upr+1))
 			upd
-			sudo apt-get install iptables-persistent
+			sudo apt-get -y install iptables-persistent
             ;;
         *)
             false
@@ -125,14 +128,14 @@ read -r -p "${1:-Do you wish to install iptables? [y/N]} " response
 
 ## Install for JRE
 jrei(){
-read -r -p "${1:-Do you wish to install default-jre? [y/N]} " response
-    case "$response" in
+read -r -p "${1:-Do you wish to install default-jre? [y/N]} " jreresp
+    case "$jreresp" in
         [yY][eE][sS]|[yY]) 
             true
 			echo "Ok, installing..."
 			upr=$((upr+1))
 			upd
-			apt-get install default-jre
+			apt-get -y install default-jre
             ;;
         *)
             false
@@ -163,7 +166,7 @@ pak
 
 #write config file and create iptables
 configw(){
-echo "Creating config file please wait......" && sleep 5
+echo "Creating config files please wait......" && sleep 5
 cat <<EOF >/usr/local/collaborator/collaborator.config 
 
   {
@@ -214,7 +217,7 @@ cat <<EOF >/usr/local/collaborator/collaborator.config
   },
   "dns": {
       "interfaces" : [{
-          "name":"ns1.$domainv", 
+          "name":"$nsv", 
           "localAddress":"$ipaddressv",
           "publicAddress":"$ipaddressv",
       }],
@@ -223,6 +226,7 @@ cat <<EOF >/usr/local/collaborator/collaborator.config
    "logLevel" : "INFO"
 }
 EOF
+# Write bin so user can call autocollaborator
 echo "Creating bin files........... " && sleep 2
 cat <<EOF >/usr/local/bin/autocollaborator
 #!/bin/bash
@@ -465,6 +469,8 @@ fi
 
 
 EOF
+echo "..... Done"
+## CHMOD autocollaborator
 chmod +x /usr/local/bin/autocollaborator
 
 echo "Removing any prerouting on target ports........" && sleep 2
