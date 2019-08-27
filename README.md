@@ -1,6 +1,6 @@
 # autocollaborator
 Automatically helps build a collaborator server.  **You will require a legal copy of burp suite pro in order to run this script.
-It is not provided in this script, it is purly for easy configuration of a burp collaborator server.** This setup runs on non-standard ports and is ideally for a dedicated collaborator server (ie only collaborator will be running on it, some minor config changes may cause other things to break).  
+It is not provided in this script, it is purely for easy configuration of a burp collaborator server.** This setup runs on non-standard ports and is ideally for a dedicated collaborator server (ie only collaborator will be running on it, some minor config changes may cause other things to break).  
 
 # Requirements
 A VPS, a domain with access to add NS and A records to and a working copy of the Burpsuite_pro.jar, the community version will not work and is not provided. 
